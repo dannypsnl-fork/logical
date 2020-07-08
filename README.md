@@ -1,3 +1,2 @@
-logical
-=======
-README text here.
+# Where is my logic?
+
