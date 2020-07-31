@@ -1,5 +1,7 @@
 #lang racket
 
+(provide (all-defined-out))
+
 (module+ test
   (require rackunit))
 
@@ -16,9 +18,7 @@
     (t (equal? v t))))
 
 (define (extract-p? p)
-  (if (parameter? p)
-      (p)
-      p))
+  (if (parameter? p) (p) p))
 
 ;;; return #t for success
 (define (unify t1 t2)
@@ -32,22 +32,26 @@
     [(t1 _) #:when (parameter? t1)
             (unify t2 t1)]
     [(a `(or ,p* ...))
-     (ormap (λ (p)
-              (unify a p)
-              #t)
-            p*)]
+     (let/cc return
+       (for-each
+        (λ (p)
+          (if (unify a p)
+              (return #t)
+              (void)))
+        p*))]
     [(`(or ,p* ...) _)
      (unify t2 t1)]
     [(`(,a* ...) `(,b* ...))
      (andmap unify a* b*)]
-    [(_ _)
-     (unless (eqv? t1 (extract-p? t2))
-       (error (format "cannot unify ~a and ~a" t1 (extract-p? t2))))]))
+    [(_ _) (eqv? t1 (extract-p? t2))]))
 
 (define (eval tm env)
   (match tm
     [`(= ,a ,b)
-     (unify (eval a env) (eval b env))]
+     (let ([a (eval a env)]
+           [b (eval b env)])
+       (unless (unify a b)
+         (error (format "cannot unify ~a and ~a" (extract-p? a) (extract-p? b)))))]
     [`(quote ,x) x]
     [`(,a* ...)
      (map (λ (a) (eval a env)) a*)]
@@ -71,20 +75,6 @@
               (displayln (pretty (eval tm env))))
             tm*))
 
-(run
- '((= ('s ('s 'z)) ('s x))
-   x))
-(run
- '((= (+ 'z n n)
-      (+ 'z 'z r))
-   r))
-(run
- '((= (or (+ 'z n n)
-          (+ ('s m) n
-             ('s (+ m n))))
-      (+ 'z 'z r))
-   r))
-
 (module+ test
   (test-case
    "unify x z"
@@ -103,4 +93,12 @@
    (define env (make-hash))
    (run '((= '(s z) ('s x)))
         env)
-   (check-equal? ((lookup env 'x)) 'z)))
+   (check-equal? ((lookup env 'x)) 'z))
+  (test-case
+   "unify +"
+   (define env (make-hash))
+   (run
+    '((= (+ 'z n n)
+         (+ 'z '(s z) r)))
+    env)
+   (check-equal? ((lookup env 'r)) '(s z))))
