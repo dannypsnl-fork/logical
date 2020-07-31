@@ -17,7 +17,8 @@
 
 (define (unify t1 t2)
   (match* (t1 t2)
-    [(_ t2) #:when (parameter? t2)
+    [(_ t2) #:when (and (parameter? t2)
+                        (symbol? (t2)))
             (if (or (eqv? t1 (t2)) (not (occurs (t2) t1)))
                 (t2 t1)
                 (error (format "~a occurs in ~a" (t2) t1)))]
@@ -26,8 +27,9 @@
     [(`(,a* ...) `(,b* ...))
      (for-each unify a* b*)]
     [(_ _)
-     (unless (eqv? t1 t2)
-       (error (format "cannot unify ~a and ~a" t1 t2)))]))
+     (let ([t2 (if (parameter? t2) (t2) t2)])
+       (unless (eqv? t1 t2)
+         (error (format "cannot unify ~a and ~a" t1 t2))))]))
 
 (define (eval tm env)
   (match tm
