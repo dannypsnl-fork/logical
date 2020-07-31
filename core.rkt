@@ -15,21 +15,24 @@
      (ormap (λ (t) (occurs v t)) t*)]
     (t (equal? v t))))
 
+;;; return #t for success
 (define (unify t1 t2)
   (match* (t1 t2)
     [(_ t2) #:when (and (parameter? t2)
                         (symbol? (t2)))
             (if (or (eqv? t1 (t2)) (not (occurs (t2) t1)))
-                (t2 t1)
+                (begin (t2 t1)
+                       #t)
                 (error (format "~a occurs in ~a" (t2) t1)))]
     [(t1 _) #:when (parameter? t1)
             (unify t2 t1)]
     [(`(,a* ...) `(,b* ...))
-     (for-each unify a* b*)]
+     (andmap unify a* b*)]
     [(_ _)
      (let ([t2 (if (parameter? t2) (t2) t2)])
        (unless (eqv? t1 t2)
-         (error (format "cannot unify ~a and ~a" t1 t2))))]))
+         (error (format "cannot unify ~a and ~a" t1 t2)))
+       #t)]))
 
 (define (eval tm env)
   (match tm
@@ -47,8 +50,18 @@
          [else x])]))
 
 (define (run tm* [env (make-hash)])
-  (for-each (λ (tm) (eval tm env))
+  (for-each (λ (tm)
+              (let* ([e (eval tm env)]
+                    [v (if (parameter? e)
+                           (e)
+                           e)])
+                (displayln v)))
             tm*))
+
+(run
+ '((= (foo 0 1) (foo x y))
+   x
+   y))
 
 (module+ test
   (test-case
