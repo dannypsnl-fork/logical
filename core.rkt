@@ -6,10 +6,23 @@
   (require rackunit))
 
 ;;; Environment
+(struct env (map parent?)
+  #:mutable
+  #:transparent)
+(define (env-new #:parent [p #f])
+  (env (make-hash) p))
 (define (lookup env v)
-  (hash-ref env v (λ () (make-parameter v))))
+  (hash-ref (env-map env) v
+            (λ ()
+              (if (env-parent? env)
+                  (lookup (env-parent? env) v)
+                  (make-parameter v)))))
 (define (extend env v e)
-  (hash-set! env v e))
+  (hash-set! (env-map env) v e))
+(define (extend/append env v e)
+  (hash-set! (env-map env) v
+             (cons e
+                   (hash-ref (env-map env) v '()))))
 
 (define (occurs v t)
   (match t
@@ -21,7 +34,7 @@
   (if (parameter? p) (p) p))
 
 ;;; return #t for success
-(define (unify t1 t2)
+(define (unify t1 t2 env)
   (match* (t1 t2)
     [(_ t2) #:when (and (parameter? t2)
                         (symbol? (t2)))
@@ -30,27 +43,37 @@
                        #t)
                 (error (format "~a occurs in ~a" (t2) (extract-p? t1))))]
     [(t1 _) #:when (parameter? t1)
-            (unify t2 t1)]
-    [(a `(or ,p* ...))
-     (let/cc return
-       (for-each
-        (λ (p)
-          (if (unify a p)
-              (return #t)
-              (void)))
-        p*))]
+            (unify t2 t1 env)]
+    [(tm #t)
+     (eq? #t (eval tm env))]
+    [(#t _)
+     (unify t2 t1 env)]
     [(`(or ,p* ...) _)
-     (unify t2 t1)]
+     (unify t2 t1 env)]
     [(`(,a* ...) `(,b* ...))
-     (andmap unify a* b*)]
+     (andmap (λ (a b) (unify a b env))
+             a* b*)]
     [(_ _) (eqv? t1 (extract-p? t2))]))
 
 (define (eval tm env)
   (match tm
+    [`(def/rule ,name ,form)
+     (extend/append env name form)]
+    [`(? ,form)
+     (unify #t form env)]
+    [`(rule ,name ,form)
+     (ormap (λ (rule)
+              (define new-env (env-new #:parent env))
+              (unify (eval rule new-env)
+                     (map (λ (tm)
+                            (eval tm env))
+                          form)
+                     new-env))
+            (lookup env name))]
     [`(= ,a ,b)
      (let ([a (eval a env)]
            [b (eval b env)])
-       (unless (unify a b)
+       (unless (unify a b env)
          (error (format "cannot unify ~a and ~a" (extract-p? a) (extract-p? b)))))]
     [`(quote ,x) x]
     [`(,a* ...)
@@ -68,7 +91,7 @@
     [`(,x* ...)
      (map pretty x*)]
     [x (extract-p? x)]))
-(define (run tm* [env (make-hash)])
+(define (run tm* [env (env-new)])
   (for-each (λ (tm)
               (displayln (pretty (eval tm env))))
             tm*))
@@ -76,25 +99,25 @@
 (module+ test
   (test-case
    "unify x z"
-   (define env (make-hash))
+   (define env (env-new))
    (run '((= x 'z))
         env)
    (check-equal? ((lookup env 'x)) 'z))
   (test-case
    "unify z x"
-   (define env (make-hash))
+   (define env (env-new))
    (run '((= 'z x))
         env)
    (check-equal? ((lookup env 'x)) 'z))
   (test-case
    "unify (s z) (s x)"
-   (define env (make-hash))
+   (define env (env-new))
    (run '((= '(s z) ('s x)))
         env)
    (check-equal? ((lookup env 'x)) 'z))
   (test-case
    "unify +"
-   (define env (make-hash))
+   (define env (env-new))
    (run
     '((= (+ 'z n n)
          (+ 'z '(s z) r)))

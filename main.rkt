@@ -3,8 +3,10 @@
 (require "core.rkt")
 
 (run
- '((= (or (+ 'z n n)
-          (+ ('s m) n
-             ('s (+ m n))))
-      (+ '(s z) 'z r))
+ '((def/rule + ('z n n))
+   (def/rule + (('s m) n
+                       ('s (rule + m n))))
+   (? (rule + ('z 'z r2)))
+   r2
+   (? (rule + (('s 'z) 'z r)))
    r))
