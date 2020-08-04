@@ -7,7 +7,7 @@
 
 ;;; Environment
 (define (lookup env v)
-  (hash-ref env v))
+  (hash-ref env v (λ () (make-parameter v))))
 (define (extend env v e)
   (hash-set! env v e))
 
@@ -58,9 +58,7 @@
     [x (cond
          [(member x '(or + -)) x]
          [(symbol? x)
-          (let* ([v (if (hash-has-key? env x)
-                        (lookup env x)
-                        (make-parameter x))])
+          (let ([v (lookup env x)])
             (extend env x v)
             v)]
          [else x])]))
