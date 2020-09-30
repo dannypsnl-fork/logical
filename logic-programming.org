@@ -52,7 +52,7 @@ This is quite easy to understand, the next try is **Integer**, with negative, it
     (set! n r)
     r))
 (define int-gen (gen))
-(int-gen) ; 0                                                                                                                                                                      0
+(int-gen) ; 0
 (int-gen) ; 1
 (int-gen) ; -1
 (int-gen) ; 2
