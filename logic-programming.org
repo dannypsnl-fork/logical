@@ -1,0 +1,79 @@
+* Logic Programming
+
+In this article, I want to introduce a simple way to create general logic programming solver. To get into the idea, first we need to know how logic programming works.
+
+#+BEGIN_QUOTE
+This article assuming reader already understand what is **pair**, **set**, **Cartesian Product**, and serveral **Cantor**'s result.
+#+END_QUOTE
+
+** Logic vs Imperative
+
+In imperative programming language a new variable usually can be introduced like ~a := 1~ or ~let a = 1~, syntax is not the point, we get a new variable =a= with value =1= in both. Now let's take a look at what a logic programming style would have: ~1 = a~ or ~a = 1~ both work and introduces variable =a=. You might think, oh, that's boring. It is. The interesting part was starting when we want to **assign** value, in imperative language we write ~a = 2~ and now =a= is =2=. But in logical language, ~a = 2~ produces an error. If you already fimilar with imperative programming langauge than you might think, what the hack? This is because logic programming treats variables differently, we can't rebind a variable in logic programming language. But why? Because the target of binding in logic programming is creating a constraint. From this prespective, define =a = 1 + b; 2 = 3 - b= make sense right now.
+
+** Getting Start
+
+Now we have some idea to make a logic solver, any assertion ~a = b~ must be followed. Since haven't know how to give solver domain, we manually assign one for each variable occurs in expression. For example, we given ~a = {1, 2, 3}~, ~b = {1, 2, 3}~, and trying to find out where ~a = b~, the answer was quite obvious: ~{1 = 1, 2 = 2, 3 = 3}~. By using **Cartesian Product** of two sets, we get set of pair: ~{(1 1), (1 2), (1 3), (2 1), (2 2), (2 3), (3 1), (3 2), (3 3)}~. With the set of pair we iterate every pair, if it makes assertion be true, we record this pair into answers.
+
+What's the problem of previous model? It can't work with infinite domain. To solve this problem, we need a way to tell how to find the next element of a variable.
+
+** What's next?
+
+We can simply write a generator for a variable, but we better give a name for them, naming always important in computer science. The first try was **Natural**:
+
+#+BEGIN_SRC racket
+(define (gen)
+  (define n -1)
+  (λ ()
+    (set! n (+ n 1))
+    n))
+;;; how to use
+(define nat-gen (gen))
+(nat-gen) ; 0
+(nat-gen) ; 1
+(nat-gen) ; 2
+#+END_SRC
+
+This is quite easy to understand, the next try is **Integer**, with negative, it became a little bit hard to figure out than **Natural**. Here is an idea:
+
+1. start from return =0=, record previous =n= as =0=
+2. if =n= is =0=, record previous =n= as =1=
+3. if =n= is positive, return =-n=, record previous =n= as =-n=
+4. if =n= is negative, return =1-n=, record previous =n= as =1-n=
+
+#+BEGIN_SRC racket
+(define (gen)
+  (define n #f)
+  (lambda ()
+    (define r (cond
+      [(not n) 0]
+      [(= 0 n) 1]
+      [(> n 0) (- n)]
+      [(< n 0) (- 1 n)]))
+    (set! n r)
+    r))
+(define int-gen (gen))
+(int-gen) ; 0                                                                                                                                                                      0
+(int-gen) ; 1
+(int-gen) ; -1
+(int-gen) ; 2
+(int-gen) ; -2
+(int-gen) ; 3
+(int-gen) ; -3
+(int-gen) ; 4
+#+END_SRC
+
+Now we can assign a generator to each variable, solver should keep generate next value into the domain of variable when can't find out any answer.
+
+*** Something nice to have
+
+We have almost a complete sovler actually, but we can add something that nice to have:
+
+**** specify how many answers we want, or we can say by default we want exact one answer. NOTE: remember to remove duplicate answers
+**** specify timeout limit
+**** allow the variable without generator
+
+About allow variable without generator, this is because not all thing can be constructed, but we probably don't know how to calculate it, the classic example is real number. The variable without generator didn't has generative domain, but it might be able to check output result fit into it's requirement.
+
+** Conclusion
+
+Though the implementation based on the algorithm I mention above could be slow, but it provides a clean concept about logic programming, and hope you have fun with the article, have a nice day!
