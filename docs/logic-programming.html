@@ -3,12 +3,12 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-10-01 Thu 06:16 -->
+<!-- 2020-10-28 Wed 01:21 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>&lrm;</title>
+<title>Logic Programming</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="林子篆" />
+<meta name="author" content="Lîm Tsú-thuàn" />
 <style type="text/css">
  <!--/*--><![CDATA[/*><!--*/
   .title  { text-align: center;
@@ -242,28 +242,22 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
+<h1 class="title">Logic Programming</h1>
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4faba63">1. Logic Programming</a>
+<li><a href="#org18e433e">1. Logic vs Imperative</a></li>
+<li><a href="#orgbac2944">2. Getting Start</a></li>
+<li><a href="#org6afa08b">3. What's next?</a>
 <ul>
-<li><a href="#orga034e12">1.1. Logic vs Imperative</a></li>
-<li><a href="#org3979bd3">1.2. Getting Start</a></li>
-<li><a href="#orgdc897ca">1.3. What's next?</a>
-<ul>
-<li><a href="#org3cd084a">1.3.1. Something nice to have</a></li>
+<li><a href="#org9cc3ae3">3.1. Something nice to have</a></li>
 </ul>
 </li>
-<li><a href="#org01abf72">1.4. Conclusion</a></li>
-</ul>
-</li>
+<li><a href="#orgc29c8db">4. Conclusion</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org4faba63" class="outline-2">
-<h2 id="org4faba63"><span class="section-number-2">1</span> Logic Programming</h2>
-<div class="outline-text-2" id="text-1">
 <p>
 In this article, I want to introduce a simple way to create general logic programming solver. To get into the idea, first we need to know how logic programming works.
 </p>
@@ -273,20 +267,19 @@ In this article, I want to introduce a simple way to create general logic progra
 This article assuming reader already understand what is <b><b>pair</b></b>, <b><b>set</b></b>, <b><b>Cartesian Product</b></b>, and serveral <b><b>Cantor</b></b>'s result.
 </p>
 </blockquote>
-</div>
 
-<div id="outline-container-orga034e12" class="outline-3">
-<h3 id="orga034e12"><span class="section-number-3">1.1</span> Logic vs Imperative</h3>
-<div class="outline-text-3" id="text-1-1">
+<div id="outline-container-org18e433e" class="outline-2">
+<h2 id="org18e433e"><span class="section-number-2">1</span> Logic vs Imperative</h2>
+<div class="outline-text-2" id="text-1">
 <p>
 In imperative programming language a new variable usually can be introduced like <code>a := 1</code> or <code>let a = 1</code>, syntax is not the point, we get a new variable <code>a</code> with value <code>1</code> in both. Now let's take a look at what a logic programming style would have: <code>1 = a</code> or <code>a = 1</code> both work and introduces variable <code>a</code>. You might think, oh, that's boring. It is. The interesting part was starting when we want to <b><b>assign</b></b> value, in imperative language we write <code>a = 2</code> and now <code>a</code> is <code>2</code>. But in logical language, <code>a = 2</code> produces an error. If you already fimilar with imperative programming langauge than you might think, what the hack? This is because logic programming treats variables differently, we can't rebind a variable in logic programming language. But why? Because the target of binding in logic programming is creating a constraint. From this prespective, define <code>a = 1 + b; 2 = 3 - b</code> make sense right now.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org3979bd3" class="outline-3">
-<h3 id="org3979bd3"><span class="section-number-3">1.2</span> Getting Start</h3>
-<div class="outline-text-3" id="text-1-2">
+<div id="outline-container-orgbac2944" class="outline-2">
+<h2 id="orgbac2944"><span class="section-number-2">2</span> Getting Start</h2>
+<div class="outline-text-2" id="text-2">
 <p>
 Now we have some idea to make a logic solver, any assertion <code>a = b</code> must be followed. Since haven't know how to give solver domain, we manually assign one for each variable occurs in expression. For example, we given <code>a = {1, 2, 3}</code>, <code>b = {1, 2, 3}</code>, and trying to find out where <code>a = b</code>, the answer was quite obvious: <code>{1 = 1, 2 = 2, 3 = 3}</code>. By using <b><b>Cartesian Product</b></b> of two sets, we get set of pair: <code>{(1 1), (1 2), (1 3), (2 1), (2 2), (2 3), (3 1), (3 2), (3 3)}</code>. With the set of pair we iterate every pair, if it makes assertion be true, we record this pair into answers.
 </p>
@@ -297,9 +290,9 @@ What's the problem of previous model? It can't work with infinite domain. To sol
 </div>
 </div>
 
-<div id="outline-container-orgdc897ca" class="outline-3">
-<h3 id="orgdc897ca"><span class="section-number-3">1.3</span> What's next?</h3>
-<div class="outline-text-3" id="text-1-3">
+<div id="outline-container-org6afa08b" class="outline-2">
+<h2 id="org6afa08b"><span class="section-number-2">3</span> What's next?</h2>
+<div class="outline-text-2" id="text-3">
 <p>
 We can simply write a generator for a variable, but we better give a name for them, naming always important in computer science. The first try was <b><b>Natural</b></b>:
 </p>
@@ -357,19 +350,19 @@ Now we can assign a generator to each variable, solver should keep generate next
 </p>
 </div>
 
-<div id="outline-container-org3cd084a" class="outline-4">
-<h4 id="org3cd084a"><span class="section-number-4">1.3.1</span> Something nice to have</h4>
-<div class="outline-text-4" id="text-1-3-1">
+<div id="outline-container-org9cc3ae3" class="outline-3">
+<h3 id="org9cc3ae3"><span class="section-number-3">3.1</span> Something nice to have</h3>
+<div class="outline-text-3" id="text-3-1">
 <p>
 We have almost a complete sovler actually, but we can add something that nice to have:
 </p>
 </div>
 
 <ol class="org-ol">
-<li><a id="org010ebe8"></a>specify how many answers we want, or we can say by default we want exact one answer. NOTE: remember to remove duplicate answers<br /></li>
-<li><a id="org19b01ec"></a>specify timeout limit<br /></li>
-<li><a id="org01a1b93"></a>allow the variable without generator<br />
-<div class="outline-text-5" id="text-1-3-1-3">
+<li><a id="org6f85867"></a>specify how many answers we want, or we can say by default we want exact one answer. NOTE: remember to remove duplicate answers<br /></li>
+<li><a id="org34c9704"></a>specify timeout limit<br /></li>
+<li><a id="orga406f74"></a>allow the variable without generator<br />
+<div class="outline-text-5" id="text-3-1-0-3">
 <p>
 About allow variable without generator, this is because not all thing can be constructed, but we probably don't know how to calculate it, the classic example is real number. The variable without generator didn't has generative domain, but it might be able to check output result fit into it's requirement.
 </p>
@@ -379,19 +372,18 @@ About allow variable without generator, this is because not all thing can be con
 </div>
 </div>
 
-<div id="outline-container-org01abf72" class="outline-3">
-<h3 id="org01abf72"><span class="section-number-3">1.4</span> Conclusion</h3>
-<div class="outline-text-3" id="text-1-4">
+<div id="outline-container-orgc29c8db" class="outline-2">
+<h2 id="orgc29c8db"><span class="section-number-2">4</span> Conclusion</h2>
+<div class="outline-text-2" id="text-4">
 <p>
 Though the implementation based on the algorithm I mention above could be slow, but it provides a clean concept about logic programming, and hope you have fun with the article, have a nice day!
 </p>
 </div>
 </div>
 </div>
-</div>
 <div id="postamble" class="status">
-<p class="author">Author: 林子篆</p>
-<p class="date">Created: 2020-10-01 Thu 06:16</p>
+<p class="author">Author: Lîm Tsú-thuàn</p>
+<p class="date">Created: 2020-10-28 Wed 01:21</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
